@@ -11,6 +11,7 @@ import com.miu.pasteit.model.entity.common.Status;
 import com.miu.pasteit.model.entity.db.nosql.Paste;
 import com.miu.pasteit.model.entity.db.sql.User;
 import com.miu.pasteit.model.request.PasteCreateRequest;
+import com.miu.pasteit.model.request.PasteUpdateRequest;
 import com.miu.pasteit.repository.mongo.PasteRepository;
 import com.miu.pasteit.repository.mongo.activity.ActivityPasteRepository;
 import com.miu.pasteit.service.user.UserService;
@@ -169,5 +170,25 @@ public class PasteServiceTest {
         given(pasteRepository.findAllByPasteUser(245L)).willReturn((List.of(paste1, paste2)));
         List<PasteModel> result = pasteService.getAllPasteByUser(245L);
         Assertions.assertThat(result.size()).isEqualTo(2);
+    }
+
+    @Test
+    void updatePaste() {
+        Paste paste = Paste.of("1111", "int x=5;", "hashedcont", "C++ Code",
+                "localhost/paste/1", "desc", PasteStatus.PUBLIC, Language.CPP, "folder",
+                23L, 234L, "eyob", LocalDateTime.now(), "share", null, 100);
+        PasteUpdateRequest updateRequest=new PasteUpdateRequest("String var=5;",
+                "string variable","public","JAVA","C:/" );
+        User user = User.of(245L, "user", "111", "nadia@gmail.com",
+                "nadia", "mimoun", Status.ACTIVE, null);
+        given(pasteRepository.findById(any())).willReturn(Optional.of(paste));
+        given(userservice.findById(any())).willReturn(Optional.of(user));
+        given(pasteRepository.save(any())).willReturn(paste);
+        ActivityPaste activityPaste = ActivityPaste.of(paste, "eyob", ActivityAction.UPDATE);
+        activitypasterepository.save(activityPaste);
+        PasteModel result=pasteService.updatePaste("1111",updateRequest,"eyob");
+        Assertions.assertThat(result.getContent()).isEqualTo("String var=5;");
+        Assertions.assertThat(result.getDescription()).isEqualTo("string variable");
+        Assertions.assertThat(result.getLanguage()).isEqualTo(Language.JAVA);
     }
 }
